@@ -1,0 +1,20 @@
+import { Controller } from './../../interfaces/controller';
+import * as express from 'express';
+import { PingController } from './ping';
+
+export class ApiController implements Controller {
+	public path = '/api';
+	public router = express.Router();
+	private controllers: Controller[] = [];
+
+	constructor() {
+		this.controllers.push(
+			new PingController()
+		);
+		this.initialize();
+	}
+
+	initialize() {
+		this.controllers.map((controller) => this.router.use(controller.path, controller.router));
+	}
+}

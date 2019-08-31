@@ -1,0 +1,14 @@
+{
+  "name": "racing",
+  "version": "1.0.0",
+  "description": "racing app",
+  "main": "http.ts",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "master": "ts-node ./master/http.ts"
+  },
+  "author": "vikas soni",
+  "license": "ISC"
+}
