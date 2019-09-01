@@ -3,14 +3,20 @@ import { Router, RequestHandler, NextFunction, Response, Request, } from "expres
 import express from 'express';
 import { Controller } from "../interfaces/controller";
 import { CONTROLLERS } from './../controllers/index';
+import { Racer } from "../models/racer";
+import { Lap } from "../models/lap";
+import { Master } from "../models/master";
 
 export class ApiServer implements HttpServer {
     private _app: express.Application;
-	private _router: Router;
+    private _router: Router;
+    
+    private _master: Master;
 
     constructor() {
         this._app = express();
         this._router = express.Router();
+        this._master = new Master();
     }
 
     /**
@@ -40,6 +46,9 @@ export class ApiServer implements HttpServer {
 
         //initialize routes
         this.initializeRoutes(CONTROLLERS);
+
+        //initialize racers
+        this.runTheRace();
     }
 
     /**
@@ -64,6 +73,16 @@ export class ApiServer implements HttpServer {
 		// handle not found routes
 		this._router.all('*', this.notFound().bind(this));
      }
+
+     /**
+      * initialize racers
+      */
+
+    runTheRace() {
+        const lap = new Lap(1, )
+        const racer1 = new Racer(1, )
+    }
+
 
      /**
       * nout found middleware
