@@ -7,7 +7,9 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "master": "ts-node ./master/http.ts"
+    "master": "ts-node ./master/http.ts",
+    "racer1": "ts-node ./racer/racer1.ts",
+    "racer2": "ts-node ./racer/racer2.ts"
   },
   "author": "vikas soni",
   "license": "ISC"
