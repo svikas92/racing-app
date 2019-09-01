@@ -18,7 +18,7 @@ export interface PosI {
 
 export interface RacerI {
     id: number;
-    // port: number;
+    port: number;
     lastPosition?: PosMessage;
 }
 

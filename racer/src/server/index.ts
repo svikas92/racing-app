@@ -3,14 +3,17 @@ import { Router, RequestHandler, NextFunction, Response, Request, } from "expres
 import express from 'express';
 import { Controller } from "../interfaces/controller";
 import { CONTROLLERS } from './../controllers/index';
+import { Racer } from "../models/racer";
 
 export class ApiServer implements HttpServer {
     private _app: express.Application;
-	private _router: Router;
+    private _router: Router;
+    private _racer: Racer;
 
-    constructor() {
+    constructor(racerId: number) {
         this._app = express();
         this._router = express.Router();
+        this._racer = new Racer(racerId);
     }
 
     /**
@@ -28,6 +31,22 @@ export class ApiServer implements HttpServer {
     get app() {
         return this._app;
     }
+
+    /**
+     * get racer
+     */
+
+    get racer() {
+        return this._racer;
+    }
+
+    /**
+     * print self identity
+     */
+
+     private callSelf() {
+         return console.log(`R${this._racer.id}`);
+     }
 
     /**
      * init script
@@ -84,6 +103,6 @@ export class ApiServer implements HttpServer {
      */
     
     public start(port: number) {
-		this.app.listen(port, () => console.log(`server is running on port ${port}`));
+		this.app.listen(port, this.callSelf.bind(this));
 	}
 }

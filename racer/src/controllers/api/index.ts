@@ -1,6 +1,7 @@
 import { Controller } from './../../interfaces/controller';
 import * as express from 'express';
 import { PingController } from './ping';
+import { LapController } from './lap';
 
 export class ApiController implements Controller {
 	public path = '/api';
@@ -9,7 +10,8 @@ export class ApiController implements Controller {
 
 	constructor() {
 		this.controllers.push(
-			new PingController()
+			new PingController(),
+			new LapController()
 		);
 		this.initialize();
 	}

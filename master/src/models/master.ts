@@ -71,7 +71,7 @@ export class Master implements MasterI {
      */
 
     runNewRacer() {
-        const newRacer = new Racer(this.getRacerCount() + 1);
+        const newRacer = new Racer(this.getRacerCount() + 1, +`400${this.getRacerCount()}`);
         this.racers.set(newRacer.id, newRacer);
 
         return newRacer;

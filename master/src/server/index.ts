@@ -10,7 +10,7 @@ import { Master } from "../models/master";
 export class ApiServer implements HttpServer {
     private _app: express.Application;
     private _router: Router;
-    
+
     private _master: Master;
 
     constructor() {
@@ -36,6 +36,14 @@ export class ApiServer implements HttpServer {
     }
 
     /**
+     * get master
+     */
+
+    get master() {
+        return this._master;
+    }
+
+    /**
      * init script
      */
 
@@ -48,7 +56,7 @@ export class ApiServer implements HttpServer {
         this.initializeRoutes(CONTROLLERS);
 
         //initialize racers
-        this.runTheRace();
+        await this.runTheRace();
     }
 
     /**
@@ -74,20 +82,20 @@ export class ApiServer implements HttpServer {
 		this._router.all('*', this.notFound().bind(this));
      }
 
-     getMaster() {
-         return this._master;
-     }
-
      /**
       * initialize racers
       */
 
-    runTheRace() {
-        const master = this.getMaster();
+    async runTheRace() {
+        const master = this.master;
         const racer1 = master.runNewRacer();
         const racer2 = master.runNewRacer();
 
-        const newLap = master.beginNewLap();
+        setInterval(async () => {
+            const newLap = master.beginNewLap();
+            await racer1.informRacer(newLap);
+            await racer2.informRacer(newLap);
+        }, 1000);
     }
 
 

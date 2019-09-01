@@ -12,10 +12,15 @@ export class LapController implements Controller {
 	}
 
 	public initialize(): void {
-		this.router.post('/collect', AsyncHandler(this.collect.bind(this)));
+		this.router.post('/collect/:lapId', AsyncHandler(this.collect.bind(this)));
 	}
 
 	private async collect(req: Request, res: Response, next: NextFunction): Promise<Response> {
+        const lapId = req.params.lapId;
+        const data = req.body;
+
+        console.log(data);
+
 		return res.status(200).send('ping!');
 	}
 }
