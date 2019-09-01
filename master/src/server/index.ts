@@ -74,18 +74,25 @@ export class ApiServer implements HttpServer {
 		this._router.all('*', this.notFound().bind(this));
      }
 
+     getMaster() {
+         return this._master;
+     }
+
      /**
       * initialize racers
       */
 
     runTheRace() {
-        const lap = new Lap(1, )
-        const racer1 = new Racer(1, )
+        const master = this.getMaster();
+        const racer1 = master.runNewRacer();
+        const racer2 = master.runNewRacer();
+
+        const newLap = master.beginNewLap();
     }
 
 
      /**
-      * nout found middleware
+      * not found middleware
       */
 
      private notFound(): RequestHandler {

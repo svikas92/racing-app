@@ -21,4 +21,10 @@ export class Racer implements RacerI {
     get lastPosition() {
         return this._lastPosition;
     }
+
+    informRacer(data: any) {
+        setInterval(() => {
+            console.log(this._id, data);
+        }, 1000);
+    }
 }

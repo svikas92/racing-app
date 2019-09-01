@@ -65,6 +65,17 @@ export class Master implements MasterI {
     getRacerCount() {
         return this.racers.size;
     }
+
+    /**
+     * run new racer
+     */
+
+    runNewRacer() {
+        const newRacer = new Racer(this.getRacerCount() + 1);
+        this.racers.set(newRacer.id, newRacer);
+
+        return newRacer;
+    }
     
     /**
      * initialize new lap
@@ -82,7 +93,7 @@ export class Master implements MasterI {
             data.push(newLineParams);
         }
 
-        this._addNewLap(data);
+        return this._addNewLap(data);
     }
     
     /**
@@ -93,7 +104,7 @@ export class Master implements MasterI {
         const newLap = new Lap(this.getLapCount() + 1, data);
          
         this.laps.set(newLap.id, newLap);
-        return this;
+        return newLap;
      }
 
     /**
