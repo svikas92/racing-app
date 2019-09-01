@@ -17,15 +17,13 @@ export class PosController implements Controller {
 	}
 
 	private async collect(req: Request, res: Response, next: NextFunction): Promise<Response> {
-		const data = req.body;
+		const data: PosMessage = req.body;
 		const racerId = req.params.racerId;
-		
-		const posMessage: PosMessage = {
-			x: data['x'],
-			y: data['y']
-		};
+		const master = req.body.master;
 
+		delete req.body.master;
 		console.log(req.body);
+
 		return res.status(200).send('ping!');
 	}
 }

@@ -65,6 +65,18 @@ export class ApiServer implements HttpServer {
 
     initializeMiddlewares() {
         this._app.use(express.json());
+        this._app.use(this._assignMaster());
+    }
+
+    /**
+     * set mater to coming request for controller access
+     */
+
+    private _assignMaster() {
+        return (req: Request, res: Response, next: NextFunction) => {
+           req.body.master = this.master;
+           next();
+        }
     }
 
     /**
@@ -91,14 +103,14 @@ export class ApiServer implements HttpServer {
         const racer1 = master.runNewRacer();
         const racer2 = master.runNewRacer();
 
-        const newLap = master.beginNewLap();
-
-        await Promise.all([
-            racer1.informRacer(newLap),
-            racer2.informRacer(newLap)
-        ]);
-        // setInterval(async () => {
-        // }, 1000);
+        
+        setInterval(async () => {
+            const newLap = master.beginNewLap();
+            await Promise.all([
+                racer1.informRacer(newLap),
+                racer2.informRacer(newLap)
+            ]);
+        }, 5000);
     }
 
 

@@ -10,6 +10,7 @@ export class Racer implements RacerI {
     private _x?: number;
     private _y?: number;
     private _line?: Line;
+    private _currentLap?: Lap;
 
     constructor(id: number) {
         this._id = id;
@@ -48,6 +49,14 @@ export class Racer implements RacerI {
      }
 
      /**
+      * get current lap
+      */
+
+      getCurrentLap() {
+          return this._currentLap;
+      }
+
+     /**
       * add new lap to racer
       */
 
@@ -57,6 +66,7 @@ export class Racer implements RacerI {
 
         this.laps.set(lap.id, lap);
         this._setLine(lap);
+        this._currentLap = lap;
         return this;
     }
 
@@ -113,8 +123,12 @@ export class Racer implements RacerI {
 
     startRuning() {
         setInterval(async() => {
-            await this.moveRacer()
-        }, 1000);
+            try {
+                await this.moveRacer()
+            } catch (err) {
+                throw err;
+            }
+        }, 50);
     }
 
     /**
@@ -129,8 +143,12 @@ export class Racer implements RacerI {
             
         this._x = this._x + 1;
         this._y = this._line.getY(this._x);
-
-        await this.informMaster();
+        
+        try {
+            await this.informMaster();
+        } catch (err) {
+            throw err;
+        }
     }
 
     /**
@@ -138,11 +156,17 @@ export class Racer implements RacerI {
      */
 
      async informMaster() {
+         let lapId = 0;
+         const currentLap = this.getCurrentLap();
+
+         if (currentLap)
+            lapId = currentLap.id;
+
          try {
              await request({
                  method: 'POST',
                  uri: `http://localhost:3000/api/pos/collect/${this.id}`,
-                 body: {x: this._x, y: this._y},
+                 body: {lapId, x: this._x, y: this._y},
                  json: true
              });
          } catch (err) {
