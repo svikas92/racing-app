@@ -14,10 +14,15 @@ export interface LineI {
 
 export interface LapI {
     id: number;
-    message: LapMessageI;
+    message: LapMessageI[];
 }
 
 export type LapMessageI = {
     m: number;
     c: number;
+}
+
+export type PointI = {
+    x: number;
+    y: number;
 }

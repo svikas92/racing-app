@@ -25,7 +25,7 @@ export class PosController implements Controller {
 			y: data['y']
 		};
 
-		
+		console.log(req.body);
 		return res.status(200).send('ping!');
 	}
 }

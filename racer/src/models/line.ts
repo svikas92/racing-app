@@ -1,4 +1,4 @@
-import { LineI } from "../interfaces/racer";
+import { LineI, PointI } from "../interfaces/racer";
 import { Racer } from "./racer";
 
 export class Line implements LineI {
@@ -26,4 +26,23 @@ export class Line implements LineI {
       get c() {
           return this._c;
       }
+
+      /**
+       * get intersecion point with given line
+       */
+
+       getIntersectionPoint(anotherLine: Line): PointI {
+           const x = (anotherLine.c - this.c) / (this.m - anotherLine.m);
+           const y = this.getY(x);
+
+           return {x, y};
+       }
+
+       /**
+        * get y cordinate of the point on the line given x
+        */
+
+        getY(x: number) {
+            return this.m * x + this.c;
+        }
 }

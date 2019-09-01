@@ -41,21 +41,12 @@ export class ApiServer implements HttpServer {
     }
 
     /**
-     * print self identity
-     */
-
-     private callSelf() {
-         return console.log(`R${this._racer.id}`);
-     }
-
-    /**
      * init script
      */
 
     async init() {
         //initialize middlewares
         this.initializeMiddlewares();
-
 
         //initialize routes
         this.initializeRoutes(CONTROLLERS);
@@ -67,7 +58,19 @@ export class ApiServer implements HttpServer {
 
     initializeMiddlewares() {
         this._app.use(express.json());
+        this._app.use(this._assignRacer());
     }
+
+    /**
+     * set racer id to coming request
+     */
+
+     private _assignRacer() {
+         return (req: Request, res: Response, next: NextFunction) => {
+            req.body.racer = this.racer;
+            next();
+         }
+     }
 
     /**
      * mount routes
@@ -103,6 +106,6 @@ export class ApiServer implements HttpServer {
      */
     
     public start(port: number) {
-		this.app.listen(port, this.callSelf.bind(this));
+        this.app.listen(port, this.racer.callSelf.bind(this.racer));
 	}
 }
