@@ -1,6 +1,11 @@
-export type PosMessage = {
+export type PointI = {
     x: number,
     y: number
+}
+
+export type BodyData = {
+    lapId: number;
+    point: PointI;
 }
 
 export type LapMessageI = {
@@ -9,24 +14,21 @@ export type LapMessageI = {
 }
 
 export interface PosI {
-    x: number;
-    y: number;
-    actualTime: number;
-    expectedTime?: number;
-    racer: RacerI
+    count: number;
+    diff: number;
 }
 
 export interface RacerI {
     id: number;
     port: number;
-    lastPosition?: PosMessage;
+    lastPosition?: PointI;
 }
 
 export interface LapI {
     id: number;
     message: LapMessageI[];
     start: number;
-    notifications: Map<number, PosI[]>
+    notifications: Map<number, PosI>
     end?: number;
 }
 

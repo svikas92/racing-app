@@ -104,13 +104,13 @@ export class ApiServer implements HttpServer {
         const racer2 = master.runNewRacer();
 
         
-        setInterval(async () => {
-            const newLap = master.beginNewLap();
-            await Promise.all([
-                racer1.informRacer(newLap),
-                racer2.informRacer(newLap)
-            ]);
-        }, 5000);
+        const newLap = await master.beginNewLap();
+        await Promise.all([
+            racer1.informRacer(newLap),
+            racer2.informRacer(newLap)
+        ]);
+        // setInterval(async () => {
+        // }, 5000);
     }
 
 

@@ -128,14 +128,14 @@ export class Racer implements RacerI {
             } catch (err) {
                 throw err;
             }
-        }, 50);
+        }, 500);
     }
 
     /**
      * move racer
      */
     async moveRacer() {
-        if (!this._x)
+        if (this._x == undefined)
             throw new Error('initial point not set!');
 
         if (!this._line)
@@ -166,7 +166,7 @@ export class Racer implements RacerI {
              await request({
                  method: 'POST',
                  uri: `http://localhost:3000/api/pos/collect/${this.id}`,
-                 body: {lapId, x: this._x, y: this._y},
+                 body: {lapId, point: {x: this._x, y: this._y}},
                  json: true
              });
          } catch (err) {

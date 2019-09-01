@@ -1,11 +1,12 @@
-import { LapI, LapMessageI, PosI, PosMessage } from "../interfaces/racer";
+import { LapI, LapMessageI, PointI, PosI } from "../interfaces/racer";
+import { Racer } from "./racer";
 
 export class Lap implements LapI {
     private _id: number;
     private _message: LapMessageI[];
     private _start: number;
     private _end?: number;
-    private _notifications: Map<number, PosI[]>;
+    private _notifications: Map<number, PosI>;
 
     constructor(id: number, message: LapMessageI[]) {
         this._id = id;
@@ -39,6 +40,14 @@ export class Lap implements LapI {
     }
 
     /**
+     * get end time
+     */
+
+     get end() {
+         return this._end;
+     }
+
+    /**
      * get notifications
      */
 
@@ -50,7 +59,29 @@ export class Lap implements LapI {
      * add notification
      */
 
-     addNotification(pos: PosMessage) {
+     addNotification(position: PointI, racer: Racer) {
+        const data = this.notifications.get(racer.id);
+        racer.lastPosition = position;
+
+        if (!data)
+            this.notifications.set(racer.id, {
+                diff: (this._start + 50) - Date.now(),
+                count: 1
+            })
+        else {
+            this._notifications.set(racer.id, {
+                diff: data.diff + (this._start + data.count * 50) - Date.now(),
+                count: data.count + 1
+            })
+        }        
+    }
+
+    /**
+     * exit lap
+     */
+
+     complete() {
+         this._end = Date.now();
 
      }
 }

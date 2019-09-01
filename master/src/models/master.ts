@@ -5,11 +5,49 @@ import { Lap } from "./lap";
 export class Master implements MasterI {
     private _racers: Map<number, Racer>;
     private _laps: Map<number, Lap>;
+    private _hasStopped = false;
 
     constructor() {
         this._racers = new Map();
         this._laps = new Map();
     }
+
+    /**
+     * 
+     * @param racer has stopped
+     */
+    get hasStopped() {
+        return this._hasStopped;
+    }
+
+    /**
+     * check if should begin new lap
+     */
+
+     canStartNewLap(racer: Racer) {
+         let can = false;
+         const currentRacer = this._racers.get(racer.id);
+
+         if (!currentRacer)
+            return false;
+
+         for (let [id, racer] of this.racers) {
+             if (!racer.lastPosition || currentRacer.id == id)
+                continue;
+            
+            if (!racer)
+                continue;
+
+            const distance = racer.getDistance(currentRacer);
+            console.log('distance', distance);
+            if (distance > 10) {
+                can = true;
+                break;
+            }
+         }
+
+         return can;
+     }
 
     /**
      * get racers
@@ -24,10 +62,25 @@ export class Master implements MasterI {
       */
 
     getRacerById(id: number) {
-        if (!this.racers.has(id))
+        const racer = this.racers.get(id);
+
+        if (!racer)
             throw new Error(`invalid racer id - ${id} !`);
         
-        return this.racers.get(id);
+        return racer;
+    }
+
+     /**
+      * get lap by id
+      */
+
+     getLapById(id: number) {
+         const lap = this.laps.get(id);
+
+        if (!lap)
+            throw new Error(`invalid lap id - ${id} !`);
+        
+        return lap;
     }
 
      /**
@@ -67,6 +120,56 @@ export class Master implements MasterI {
     }
 
     /**
+     * notify racers of new lap
+     */
+
+    async notifyRacers(lap: Lap) {
+        const promises: any[] = [];
+
+        for (let [id, racer] of this.racers) {
+            promises.push(racer.informRacer(lap));
+        }
+
+
+        try {
+            await Promise.all(promises);
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    /**
+     * notify racers of new lap
+     */
+
+    async stopRacers() {
+        const promises: any[] = [];
+
+        for (let [id, racer] of this.racers) {
+            promises.push(racer.stopRacer());
+        }
+
+        for(let [i, lap] of this.laps){
+            if (lap)
+                if (lap.end) {
+                    const data: any[] = [];
+                    lap.notifications.forEach((value) => data.push(value.diff/value.count));
+                    
+                    console.log([i, lap.message, lap.end - lap.start, ...data])
+                }
+        }
+        
+        try {
+            await Promise.all(promises);
+        } catch (err) {
+            Promise.resolve(process.exit());
+            // console.log('nice la')
+            // throw err;
+        }
+        
+        Promise.resolve(process.exit());
+    }
+    /**
      * run new racer
      */
 
@@ -81,8 +184,13 @@ export class Master implements MasterI {
      * initialize new lap
      */
 
-    beginNewLap() {
+    async beginNewLap() {
         const data: LapMessageI[] = [];
+
+        if (this.laps.size == 10) {
+            this._hasStopped = true;
+            await this.stopRacers();
+        }
 
         for (let [id, racer] of this.racers) {
             const newLineParams: LapMessageI = {
@@ -112,7 +220,7 @@ export class Master implements MasterI {
      */
 
      generateInteger() {
-         const random = this._genRandom(0, 1000);
+         const random = this._genRandom(0, 5);
          const flag = Math.round(Math.random());
 
          if (flag)
