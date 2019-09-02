@@ -1,241 +1,263 @@
+import { PointI } from './../interfaces/racer';
 import { MasterI, LapMessageI } from "../interfaces/racer";
 import { Racer } from "./racer";
 import { Lap } from "./lap";
 
 export class Master implements MasterI {
-    private _racers: Map<number, Racer>;
-    private _laps: Map<number, Lap>;
-    private _hasStopped = false;
+	private _racers: Map<number, Racer>;
+	private _laps: Map<number, Lap>;
+	private _hasStopped = false;
 
-    constructor() {
-        this._racers = new Map();
-        this._laps = new Map();
-    }
+	constructor() {
+		this._racers = new Map();
+		this._laps = new Map();
+	}
 
-    /**
-     * 
-     * @param racer has stopped
-     */
-    get hasStopped() {
-        return this._hasStopped;
-    }
+	/**
+	 * 
+	 * @param racer has stopped
+	 */
+	get hasStopped() {
+		return this._hasStopped;
+	}
 
-    /**
-     * check if should begin new lap
-     */
+	/**
+	 * check if should begin new lap
+	 */
 
-     canStartNewLap(racer: Racer) {
-         let can = false;
-         const currentRacer = this._racers.get(racer.id);
+	async canStartNewLap(runningLap: Lap) {
+		let can = false;
+		const points: PointI[] = [];
 
-         if (!currentRacer)
-            return false;
+		for (let [racerId, notification] of runningLap.notifications) {
+			if (notification.active)
+				points.push(notification.active)
+		}
 
-         for (let [id, racer] of this.racers) {
-             if (!racer.lastPosition || currentRacer.id == id)
-                continue;
-            
-            if (!racer)
-                continue;
+		if (points.length == this.getRacerCount()) {
+			const distance = this.getMaxDistanceBetweenPoints(points);
 
-            const distance = racer.getDistance(currentRacer);
-            console.log('distance', distance);
-            if (distance > 10) {
-                can = true;
-                break;
-            }
-         }
+			if (distance >= 10)
+				can = true;
 
-         return can;
-     }
+			for (let [racerId, notification] of runningLap.notifications) {
+				notification.active = notification.queue[0];
+				notification.queue = [...notification.queue.slice(0)];
+			}
+		}
 
-    /**
-     * get racers
-     */
+		return can;
+	}
 
-     get racers() {
-         return this._racers;
-     }
+	/**
+	 * get distance between points
+	 */
 
-     /**
-      * get racer by id
-      */
+	getMaxDistanceBetweenPoints(points: PointI[]) {
+		let distance = -Infinity;
 
-    getRacerById(id: number) {
-        const racer = this.racers.get(id);
+		for (let i = 0; i < points.length; i++) {
+			const point1 = points[i];
+			for (let j = i + 1; j < points.length; j++) {
+				const point2 = points[j];
+				if (this._distanceBetweenTwoPoints(point1, point2) > distance)
+					distance = this._distanceBetweenTwoPoints(point1, point2);
+			}
+		}
 
-        if (!racer)
-            throw new Error(`invalid racer id - ${id} !`);
-        
-        return racer;
-    }
+		return distance;
+	}
 
-     /**
-      * get lap by id
-      */
+	/**
+	 * get distance between two points
+	 */
 
-     getLapById(id: number) {
-         const lap = this.laps.get(id);
+	private _distanceBetweenTwoPoints(point1: PointI, point2: PointI) {
+		const distance = Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2);
+		return Math.sqrt(distance);
+	}
 
-        if (!lap)
-            throw new Error(`invalid lap id - ${id} !`);
-        
-        return lap;
-    }
+	/**
+	 * get racers
+	 */
 
-     /**
-      * add new racer
-      */
+	get racers() {
+		return this._racers;
+	}
 
-    addRacer(racer: Racer) {
-        if (this.racers.has(racer.id))
-            throw new Error(`racer with id ${racer.id} already exists!`);
-        
-        this.racers.set(racer.id, racer);
-        return this;
-    }
+	/**
+	 * get racer by id
+	 */
 
-    /**
-     * get all laps
-     */
+	getRacerById(id: number) {
+		const racer = this.racers.get(id);
 
-    get laps() {
-        return this._laps;
-    }
+		if (!racer)
+			throw new Error(`invalid racer id - ${id} !`);
 
-    /**
-     * lap count
-     */
+		return racer;
+	}
 
-    getLapCount() {
-        return this.laps.size;
-    }
+	/**
+	 * get lap by id
+	 */
 
-    /**
-     * get racer count
-     */
+	getLapById(id: number) {
+		const lap = this.laps.get(id);
 
-    getRacerCount() {
-        return this.racers.size;
-    }
+		if (!lap)
+			throw new Error(`invalid lap id - ${id} !`);
 
-    /**
-     * notify racers of new lap
-     */
+		return lap;
+	}
 
-    async notifyRacers(lap: Lap) {
-        const promises: any[] = [];
+	/**
+	 * add new racer
+	 */
 
-        for (let [id, racer] of this.racers) {
-            promises.push(racer.informRacer(lap));
-        }
+	addRacer(racer: Racer) {
+		if (this.racers.has(racer.id))
+			throw new Error(`racer with id ${racer.id} already exists!`);
 
+		this.racers.set(racer.id, racer);
+		return this;
+	}
 
-        try {
-            await Promise.all(promises);
-        } catch (err) {
-            throw err;
-        }
-    }
+	/**
+	 * get all laps
+	 */
 
-    /**
-     * notify racers of new lap
-     */
+	get laps() {
+		return this._laps;
+	}
 
-    async stopRacers() {
-        const promises: any[] = [];
+	/**
+	 * lap count
+	 */
 
-        for (let [id, racer] of this.racers) {
-            promises.push(racer.stopRacer());
-        }
+	getLapCount() {
+		return this.laps.size;
+	}
 
-        for(let [i, lap] of this.laps){
-            if (lap)
-                if (lap.end) {
-                    const data: any[] = [];
-                    lap.notifications.forEach((value) => data.push(value.diff/value.count));
-                    
-                    console.log([i, lap.message, lap.end - lap.start, ...data])
-                }
-        }
-        
-        try {
-            await Promise.all(promises);
-        } catch (err) {
-            Promise.resolve(process.exit());
-            // console.log('nice la')
-            // throw err;
-        }
-        
-        Promise.resolve(process.exit());
-    }
-    /**
-     * run new racer
-     */
+	/**
+	 * get racer count
+	 */
 
-    runNewRacer() {
-        const newRacer = new Racer(this.getRacerCount() + 1, +`400${this.getRacerCount()}`);
-        this.racers.set(newRacer.id, newRacer);
+	getRacerCount() {
+		return this.racers.size;
+	}
 
-        return newRacer;
-    }
-    
-    /**
-     * initialize new lap
-     */
+	/**
+	 * notify racers of new lap
+	 */
 
-    async beginNewLap() {
-        const data: LapMessageI[] = [];
+	async notifyRacers(lap: Lap) {
+		const promises: any[] = [];
 
-        if (this.laps.size == 10) {
-            this._hasStopped = true;
-            await this.stopRacers();
-        }
+		for (let [id, racer] of this.racers) {
+			promises.push(racer.informRacer(lap));
+		}
 
-        for (let [id, racer] of this.racers) {
-            const newLineParams: LapMessageI = {
-                m: this.generateInteger(),
-                c: this.generateInteger()
-            }
+		try {
+			await Promise.all(promises);
+		} catch (err) {
+			throw err;
+		}
+	}
 
-            data.push(newLineParams);
-        }
+	/**
+	 * notify racers of new lap
+	 */
 
-        return this._addNewLap(data);
-    }
-    
-    /**
-     * add new lap
-     */
-    
-    private _addNewLap(data: LapMessageI[]) {
-        const newLap = new Lap(this.getLapCount() + 1, data);
-         
-        this.laps.set(newLap.id, newLap);
-        return newLap;
-     }
+	async stopRacers() {
+		const promises: any[] = [];
 
-    /**
-     * get random slope and constant for all racers
-     */
+		for (let [id, racer] of this.racers) {
+			promises.push(racer.stopRacer());
+		}
 
-     generateInteger() {
-         const random = this._genRandom(0, 5);
-         const flag = Math.round(Math.random());
+		for (let [i, lap] of this.laps) {
+			if (lap)
+				if (lap.end) {
+					const data: any[] = [];
+					lap.notifications.forEach((value) => data.push(value.diff / value.count));
 
-         if (flag)
-            return random;
-        else
-            return -random;
-     }
+					console.log([i, lap.message, lap.end - lap.start, ...data])
+				}
+		}
 
-     /**
-      * get a random interger between range (boundary included)
-      * @param min 
-      * @param max 
-      */
+		try {
+			await Promise.all(promises);
+		} catch (err) {
+			Promise.resolve(process.exit());
+			// console.log('nice la')
+			// throw err;
+		}
 
-     private _genRandom(min: number, max: number) {
-        return Math.floor(Math.random() * (max - min + 1) ) + min;
-      }
+		Promise.resolve(process.exit());
+	}
+	/**
+	 * run new racer
+	 */
+
+	runNewRacer() {
+		const newRacer = new Racer(this.getRacerCount() + 1, +`400${this.getRacerCount()}`);
+		this.racers.set(newRacer.id, newRacer);
+
+		return newRacer;
+	}
+
+	/**
+	 * initialize new lap
+	 */
+
+	async beginNewLap() {
+		const data: LapMessageI[] = [];
+
+		for (let [id, racer] of this.racers) {
+			const newLineParams: LapMessageI = {
+				m: this.generateInteger(),
+				c: this.generateInteger()
+			}
+
+			data.push(newLineParams);
+		}
+
+		return this._addNewLap(data);
+	}
+
+	/**
+	 * add new lap
+	 */
+
+	private _addNewLap(data: LapMessageI[]) {
+		const newLap = new Lap(this.getLapCount() + 1, data);
+
+		this.laps.set(newLap.id, newLap);
+		return newLap;
+	}
+
+	/**
+	 * get random slope and constant for all racers
+	 */
+
+	generateInteger() {
+		const random = this._genRandom(0, 10);
+		const flag = Math.round(Math.random());
+
+		if (flag)
+			return random;
+		else
+			return -random;
+	}
+
+	/**
+	 * get a random interger between range (boundary included)
+	 * @param min 
+	 * @param max 
+	 */
+
+	private _genRandom(min: number, max: number) {
+		return Math.floor(Math.random() * (max - min + 1)) + min;
+	}
 }

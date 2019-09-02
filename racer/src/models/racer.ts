@@ -1,176 +1,211 @@
-import { RacerI, PointI } from "../interfaces/racer";
+import { RacerI, PointI, LapMessageI } from "../interfaces/racer";
 import { Line } from "./line";
 import { Lap } from "./lap";
 import request = require('request-promise-native');
 
 export class Racer implements RacerI {
-    private _id: number;
-    private _laps: Map<number, Lap>;
-    
-    private _x?: number;
-    private _y?: number;
-    private _line?: Line;
-    private _currentLap?: Lap;
+	private _id: number;
+	private _laps: Map<number, Lap>;
+	private _currentLap?: Lap;
 
-    constructor(id: number) {
-        this._id = id;
-        this._laps = new Map();
-    }
+	constructor(id: number) {
+		this._id = id;
+		this._laps = new Map();
+	}
 
-    /**
-     * get current x cordinate
-     */
+	/**
+	 * get racer id
+	 */
 
-     get x() {
-         return this._x;
-     }
+	get id() {
+		return this._id;
+	}
 
-     /**
-      * get current y cordinate
-      */
-     get y() {
-         return this._y;
-     }
+	/**
+	 * get racer laps
+	 */
 
-    /**
-     * get racer id
-     */
+	get laps() {
+		return this._laps;
+	}
 
-     get id() {
-         return this._id;
-     }
+	/**
+	 * get current lap
+	 */
 
-     /**
-      * get racer laps
-      */
+	getCurrentLap() {
+		return this._currentLap;
+	}
 
-     get laps() {
-         return this._laps;
-     }
+	/**
+	 * add new lap to racer
+	 */
 
-     /**
-      * get current lap
-      */
+	addLap(lap: Lap) {
+		if (this.laps.has(lap.id))
+			throw new Error('lap already exists!');
 
-      getCurrentLap() {
-          return this._currentLap;
-      }
+		this.laps.set(lap.id, lap);
+		this._setLine(lap);
+		return this;
+	}
 
-     /**
-      * add new lap to racer
-      */
+	/**
+	 * set line with given lap
+	 */
+	private _setLine(lap: Lap) {
+		const lineParams = lap.message[this.id - 1];
+		const selfLine = new Line(lineParams.m, lineParams.c);
 
-    addLap(lap: Lap) {
-        if (this.laps.has(lap.id))
-        throw new Error('lap already exists!');
+		this._currentLap = lap;
+		this._currentLap.line = selfLine;
+	}
 
-        this.laps.set(lap.id, lap);
-        this._setLine(lap);
-        this._currentLap = lap;
-        return this;
-    }
+	/**
+ * print self identity
+ */
 
-    /**
-     * set line with given lap
-     */
-    private _setLine(lap: Lap) {
-        const lineParams = lap.message[this.id - 1];
-        const selfLine = new Line(lineParams.m, lineParams.c);
+	callSelf() {
+		return console.log(`R${this.id}`);
+	}
 
-        this._line = selfLine;
-    }
+	/**
+	 * start running
+	 */
 
-       /**
-     * print self identity
-     */
+	async readyForRun(lap: Lap) {
+		const message = lap.message;
+		const currentLap = this.laps.get(lap.id);
 
-    callSelf() {
-        return console.log(`R${this.id}`);
-    }
+		if (!currentLap)
+			throw new Error(`invalid lap for the racer with id ${this.id}!`);
 
-      /**
-       * start running
-       */
+		const selfLine = currentLap.line;
+		if (!selfLine)
+			throw new Error(`invalid line for the racer with id ${this.id}!`);
 
-    readyForRun(lap: Lap) {
-        const message = lap.message;
-        const selfLine = this._line;
+		const index = this.id == 2 ? 0 : 1;
+		const otherLineParams = message[index];
+		const otherLine = new Line(otherLineParams.m, otherLineParams.c);
 
-        if (!selfLine)
-            throw new Error(`invalid line for the racer with id ${this.id}!`);
+		const intersection = selfLine.getIntersectionPoint(otherLine);
 
-        const index = this.id == 2 ? 0: 1;
-        const otherLineParams = message[index];
-        const otherLine = new Line(otherLineParams.m, otherLineParams.c);
+		console.log('intersection', intersection);
 
-        const intersection = selfLine.getIntersectionPoint(otherLine);
-        this.setInitialPoint(intersection);
-        this.startRuning();
-    }
+		if (intersection.x == -Infinity || intersection.x == Infinity || intersection.y == Infinity || intersection.x == -Infinity)
+			throw new Error('found parallel lines, stopping!');
 
-    /**
-     * set initial point
-     */
+		if (selfLine.m == otherLine.m && selfLine.c == otherLine.c)
+			throw new Error('found identical lines, stopping!');
 
-     setInitialPoint(point: PointI) {
-         this._x = point.x;
-         this._y = point.y;
-     }
+		this.setInitialPoint(intersection, lap);
+		await this.startRuning(lap);
+	}
 
-      /**
-       * move racer
-       */
+	/**
+	 * set initial point
+	 */
 
-    startRuning() {
-        setInterval(async() => {
-            try {
-                await this.moveRacer()
-            } catch (err) {
-                throw err;
-            }
-        }, 500);
-    }
+	setInitialPoint(point: PointI, lap: Lap) {
+		lap.x = point.x;
+		lap.y = point.y;
+	}
 
-    /**
-     * move racer
-     */
-    async moveRacer() {
-        if (this._x == undefined)
-            throw new Error('initial point not set!');
+	/**
+	 * stop running lap
+	 * @param newLapId
+	 */
 
-        if (!this._line)
-            throw new Error('line is not set!');
-            
-        this._x = this._x + 1;
-        this._y = this._line.getY(this._x);
-        
-        try {
-            await this.informMaster();
-        } catch (err) {
-            throw err;
-        }
-    }
+	async stopRunningLap(newLapId: number) {
+		const lastlap = newLapId - 1;
+		const lap = this._laps.get(lastlap);
 
-    /**
-     * inform master of movement
-     */
+		if (lap)
+			if (typeof lap.run != 'number') {
+				if (lap.run)
+					clearInterval(lap.run);
+			}
 
-     async informMaster() {
-         let lapId = 0;
-         const currentLap = this.getCurrentLap();
+		return this;
+	}
 
-         if (currentLap)
-            lapId = currentLap.id;
+	/**
+	 * start new lap with given it
+	 * @param lap 
+	 */
 
-         try {
-             await request({
-                 method: 'POST',
-                 uri: `http://localhost:3000/api/pos/collect/${this.id}`,
-                 body: {lapId, point: {x: this._x, y: this._y}},
-                 json: true
-             });
-         } catch (err) {
-             throw err;
-         }
-     }
+	async startNewLap(lapId: number, data: LapMessageI[]) {
+		const newLap = new Lap(lapId, data);
+		this.addLap(newLap);
+
+		return newLap;
+	}
+
+	/**
+	 * move racer
+	 */
+
+	async startRuning(lap: Lap) {
+		return new Promise((resolve, reject) => {
+			setTimeout(() => {
+				const currentLap = this.laps.get(lap.id);
+				if (currentLap)
+					currentLap.run = setInterval(async () => {
+						const lapId = currentLap.id;
+						try {
+							await this.moveRacer(lapId);
+						} catch (err) {
+							reject(err);
+						}
+					}, 50);
+			});
+			resolve();
+		});
+	}
+
+	/**
+	 * move racer
+	 */
+	async moveRacer(lapId: number) {
+		const currentLap = this.laps.get(lapId);
+
+		if (!currentLap)
+			throw new Error('no valid lap!');
+
+		if (currentLap.x == undefined)
+			throw new Error('initial point not set!');
+
+		if (!currentLap.line)
+			throw new Error('line is not set!');
+
+		currentLap.x = currentLap.x + 1;
+		currentLap.y = currentLap.line.getY(currentLap.x);
+
+		try {
+			await this.informMaster(lapId);
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	/**
+	 * inform master of movement
+	 */
+
+	async informMaster(lapId: number) {
+		const currentLap = this.laps.get(lapId);
+		if (!currentLap)
+			throw new Error('no valid lap!');
+
+		try {
+			await request({
+				method: 'POST',
+				uri: `http://localhost:3000/api/pos/collect/${this.id}`,
+				body: { lapId, point: { x: currentLap.x, y: currentLap.y } },
+				json: true
+			});
+		} catch (err) {
+			throw err;
+		}
+	}
 }

@@ -1,6 +1,6 @@
 import { AsyncHandler } from '../../utils/async';
-import * as express from 'express';
 import { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import { Controller } from '../../interfaces/controller';
 import { BodyData } from '../../interfaces/racer';
 import { Master } from '../../models/master';
@@ -23,19 +23,29 @@ export class PosController implements Controller {
 		const master: Master = req.body.master;
 
 		delete req.body.master;
-		if (!master.hasStopped)
-			console.log(racerId, req.body);
+		// if (!master.hasStopped)
+		console.log(racerId, req.body);
 
-		const lap = master.getLapById(data.lapId);
+		const runningLap = master.getLapById(data.lapId);
 		const racer = master.getRacerById(racerId);
 
-		lap.addNotification(data.point, racer);
-		
-		if (master.canStartNewLap(racer)) {
-			lap.complete();
-			const newLap = await master.beginNewLap();
-			
-			master.notifyRacers(newLap);
+		runningLap.addNotification(data.point, racer);
+
+		if (await master.canStartNewLap(runningLap)) {
+
+			runningLap.complete();
+
+			if (master.getLapCount() == 10) {
+				await master.stopRacers();
+			} else {
+				const newLap = await master.beginNewLap();
+
+				if (!newLap)
+					return res.sendStatus(200);
+
+				await master.notifyRacers(newLap);
+			}
+
 		}
 
 		return res.status(200).send('ping!');

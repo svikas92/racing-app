@@ -20,38 +20,46 @@ export class LapController implements Controller {
 	}
 
 	private async collect(req: Request, res: Response, next: NextFunction): Promise<Response> {
-        const lapId = +req.params.lapId;
+		const lapId = +req.params.lapId;
 		const data: LapMessageI[] = req.body;
 		const racer: Racer = req.body.racer;
-		
+
 		delete req.body.racer
+		// print received lap message
 		console.log(req.body);
 
-		const newLap = new Lap(lapId, data);
-		racer.addLap(newLap);
-		racer.readyForRun(newLap);
+		// stop running laps
+		await racer.stopRunningLap(lapId);
 
-		return res.status(200).send('ping!');
+		// start new lap to racer
+		const newLap = await racer.startNewLap(lapId, data);
+
+		try {
+			await racer.readyForRun(newLap);
+		} catch (err) {
+			throw err;
+		}
+
+		return res.sendStatus(200);
 	}
 
 	private async stop(req: Request, res: Response, next: NextFunction): Promise<any> {
 		const racer: Racer = req.body.racer;
-		
+
 		delete req.body.racer
 		console.log(req.body);
 
-		
-		// process.addListener('beforeExit', () => {
-		// });
-		
+		const currentLap = racer.getCurrentLap();
+		if (currentLap)
+			if (typeof currentLap.run != 'number')
+				if (currentLap.run)
+					clearInterval(currentLap.run);
+
 		for (let [i, lap] of racer.laps) {
 			if (lap)
 				console.log(lap.message);
 		}
-		// process.emit('beforeExit', 123);
-		process.exit()
-		
-		// res.sendStatus(200);
-		// return res.sendStatus(200);
+
+		return Promise.resolve(process.exit());
 	}
 }

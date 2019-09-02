@@ -1,5 +1,5 @@
 import { AsyncHandler } from './../../utils/async';
-import * as express from 'express';
+import express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import { Controller } from '../../interfaces/controller';
 

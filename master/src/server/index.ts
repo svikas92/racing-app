@@ -8,131 +8,137 @@ import { Lap } from "../models/lap";
 import { Master } from "../models/master";
 
 export class ApiServer implements HttpServer {
-    private _app: express.Application;
-    private _router: Router;
+	private _app: express.Application;
+	private _router: Router;
 
-    private _master: Master;
+	private _master: Master;
 
-    constructor() {
-        this._app = express();
-        this._router = express.Router();
-        this._master = new Master();
-    }
+	constructor() {
+		this._app = express();
+		this._router = express.Router();
+		this._master = new Master();
+	}
 
-    /**
-     * get api server router
-     */
+	/**
+	 * get api server router
+	 */
 
-    get router() {
-        return this._router;
-    }
+	get router() {
+		return this._router;
+	}
 
-    /**
-     * get express app instance
-     */
+	/**
+	 * get express app instance
+	 */
 
-    get app() {
-        return this._app;
-    }
+	get app() {
+		return this._app;
+	}
 
-    /**
-     * get master
-     */
+	/**
+	 * get master
+	 */
 
-    get master() {
-        return this._master;
-    }
+	get master() {
+		return this._master;
+	}
 
-    /**
-     * init script
-     */
+	/**
+	 * init script
+	 */
 
-    async init() {
-        //initialize middlewares
-        this.initializeMiddlewares();
+	async init() {
+		//initialize middlewares
+		this.initializeMiddlewares();
 
 
-        //initialize routes
-        this.initializeRoutes(CONTROLLERS);
+		//initialize routes
+		this.initializeRoutes(CONTROLLERS);
+	}
 
-        //initialize racers
-        await this.runTheRace();
-    }
+	/**
+	 * middleware init function
+	 * */
 
-    /**
-     * middleware init function
-     * */
+	initializeMiddlewares() {
+		this._app.use(express.json());
+		this._app.use(this._assignMaster());
+	}
 
-    initializeMiddlewares() {
-        this._app.use(express.json());
-        this._app.use(this._assignMaster());
-    }
+	/**
+	 * set mater to coming request for controller access
+	 */
 
-    /**
-     * set mater to coming request for controller access
-     */
+	private _assignMaster() {
+		return (req: Request, res: Response, next: NextFunction) => {
+			req.body.master = this.master;
+			next();
+		}
+	}
 
-    private _assignMaster() {
-        return (req: Request, res: Response, next: NextFunction) => {
-           req.body.master = this.master;
-           next();
-        }
-    }
+	/**
+	 * mount routes
+	 */
 
-    /**
-     * mount routes
-     */
+	initializeRoutes(controllers: Controller[]) {
+		// mount controller with their respective path and router
+		controllers.map((controller) => this._app.use(controller.path, controller.router));
 
-     initializeRoutes(controllers: Controller[]) {
-         // mount controller with their respective path and router
-         controllers.map((controller) => this._app.use(controller.path, controller.router));
-
-         // mount all routers to app instance
+		// mount all routers to app instance
 		this._app.use('/', this._router);
 
 		// handle not found routes
 		this._router.all('*', this.notFound().bind(this));
-     }
+	}
 
-     /**
-      * initialize racers
-      */
+	/**
+	 * initialize racers
+	 */
 
-    async runTheRace() {
-        const master = this.master;
-        const racer1 = master.runNewRacer();
-        const racer2 = master.runNewRacer();
-
-        
-        const newLap = await master.beginNewLap();
-        await Promise.all([
-            racer1.informRacer(newLap),
-            racer2.informRacer(newLap)
-        ]);
-        // setInterval(async () => {
-        // }, 5000);
-    }
+	async runTheRace() {
+		const master = this.master;
+		const racer1 = master.runNewRacer();
+		const racer2 = master.runNewRacer();
 
 
-     /**
-      * not found middleware
-      */
+		const newLap = await master.beginNewLap();
+		if (!newLap)
+			return;
 
-     private notFound(): RequestHandler {
+		try {
+			await Promise.all([
+				racer1.informRacer(newLap),
+				racer2.informRacer(newLap)
+			]);
+		} catch (err) {
+			throw err;
+		}
+		// setInterval(async () => {
+		// }, 5000);
+	}
+
+
+	/**
+	 * not found middleware
+	 */
+
+	private notFound(): RequestHandler {
 		return (req: Request, res: Response, next: express.NextFunction) => {
 			console.log(`${req.method} 404 Not Found, ${req.path}`);
 			return res.status(404).send({
 				msg: 'Not found!'
 			});
 		};
-    }
-    
-    /**
-     * start the server on given port
-     * @param port
-     */
-    
-    public start(port: number) {
-		this.app.listen(port, () => console.log(`server is running on port ${port}`));
+	}
+
+	/**
+	 * start the server on given port
+	 * @param port
+	 */
+
+	public start(port: number) {
+		return new Promise((resolve) => {
+			this.app.listen(port, () => resolve(console.log(`server is running on port ${port}`)));
+		})
 	}
 }

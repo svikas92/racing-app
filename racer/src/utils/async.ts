@@ -7,7 +7,7 @@ class AsyncWrap {
 				await handler(req, res, next);
 			}
 			catch (ex) {
-				console.log(ex);
+				console.log(ex.message);
 				return res.status(400).send(ex);
 			}
 		}
