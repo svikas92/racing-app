@@ -176,6 +176,8 @@ export class Master implements MasterI {
 			promises.push(racer.stopRacer());
 		}
 
+		console.log('master laps - ');
+
 		for (let [i, lap] of this.laps) {
 			if (lap)
 				if (lap.end) {

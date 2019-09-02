@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ApiServer } from './src/server/index';
+import { ApiServer } from './server/index';
 
 const server = new ApiServer();
 server.init()

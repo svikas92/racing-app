@@ -197,10 +197,16 @@ export class Racer implements RacerI {
 		if (!currentLap)
 			throw new Error('no valid lap!');
 
+		let uri = '';
+		if (process.env.NODE_ENV == 'development')
+			uri = `http://localhost:3000/api/pos/collect/${this.id}`;
+		else
+			uri = `http://master:9000/api/pos/collect/${this.id}`;
+
 		try {
-			await request({
+			return request({
 				method: 'POST',
-				uri: `http://localhost:3000/api/pos/collect/${this.id}`,
+				uri,
 				body: { lapId, point: { x: currentLap.x, y: currentLap.y } },
 				json: true
 			});

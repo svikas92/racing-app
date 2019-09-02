@@ -29,7 +29,8 @@ export class LapController implements Controller {
 		console.log(req.body);
 
 		// stop running laps
-		await racer.stopRunningLap(lapId);
+		if (racer.laps.size != 0)
+			await racer.stopRunningLap(lapId);
 
 		// start new lap to racer
 		const newLap = await racer.startNewLap(lapId, data);
@@ -47,7 +48,7 @@ export class LapController implements Controller {
 		const racer: Racer = req.body.racer;
 
 		delete req.body.racer
-		console.log(req.body);
+		console.log(`stop racer ${racer.id}`);
 
 		const currentLap = racer.getCurrentLap();
 		if (currentLap)
@@ -55,9 +56,10 @@ export class LapController implements Controller {
 				if (currentLap.run)
 					clearInterval(currentLap.run);
 
+
 		for (let [i, lap] of racer.laps) {
 			if (lap)
-				console.log(lap.message);
+				console.log(`racer ${racer.id} lap ${i} - `, lap.message);
 		}
 
 		return Promise.resolve(process.exit());

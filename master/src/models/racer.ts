@@ -64,9 +64,16 @@ export class Racer implements RacerI {
 	 */
 
 	async informRacer(lap: Lap) {
+		let uri = ''
+
+		if (process.env.NODE_ENV == 'development')
+			uri = `http://localhost:900${this.id}/api/lap/collect/${lap.id}`;
+		else
+			uri = `http://racer${this.id}:900${this.id}/api/lap/collect/${lap.id}`;
+
 		return request({
 			method: 'POST',
-			uri: `http://localhost:${this.port}/api/lap/collect/${lap.id}`,
+			uri,
 			body: lap.message,
 			json: true
 		});
@@ -79,7 +86,8 @@ export class Racer implements RacerI {
 	async stopRacer() {
 		return request({
 			method: 'POST',
-			uri: `http://localhost:${this.port}/api/lap/stop`,
+			// uri: `http://racer${this.id}:900${this.id}/api/lap/stop`,
+			uri: `http://localhost:900${this.id}/api/lap/stop`,
 			body: {},
 			json: true
 		})

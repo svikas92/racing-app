@@ -1,0 +1,26 @@
+version: '3'
+services:
+  master:
+    container_name: master
+    build: .
+    command: nodemon --exec ts-node master/src/http.ts
+    restart: always
+    depends_on: 
+      - racer1
+      - racer2
+    ports:
+      - "9000:3000"   
+  racer1:
+    container_name: racer1
+    build: .
+    command: nodemon --exec ts-node racer/src/racer1.ts
+    restart: always
+    ports:
+      - "9001:9001"
+  racer2:
+    container_name: racer2
+    build: .
+    command: nodemon --exec ts-node racer/src/racer2.ts
+    restart: always
+    ports:
+      - "9002:9002"    
