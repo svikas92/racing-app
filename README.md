@@ -34,6 +34,6 @@ I have implemented 3 ways to run the processes
 	## racer processes will stop if they find any parallel or identical lines by informing on the console.
 	## if stopped, restart will be required for all the processes
 	## intersection points will also be printed with each lap
-	## a random generator function is written for generating interger m and c
+	## a random generator function is written for generating integer m and c
 	## range for m and c are configurable and currenly set to [-10, 10] in master/src/models/master.ts
 
