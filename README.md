@@ -24,10 +24,10 @@ I have implemented 3 ways to run the processes
 #### method 3 - separate docker containers for all the 3 processes
 1. run -> docker-compose up --build
 
-# this will launch 3 containers and the first lap log will be visible on the console
-# but unfortunately continue calls to the master container is not working
-# i do not have any experience with docker, so i could not track down the issue
-# please suggest what am i doing wrong here.
+	# this will launch 3 containers and the first lap log will be visible on the console
+	# but unfortunately continue calls to the master container is not working
+	# i do not have any experience with docker, so i could not track down the issue
+	# please suggest what am i doing wrong here.
 
 ###### project details
 	## racer processes will stop if they find any parallel or identical lines by informing on the console.
