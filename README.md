@@ -17,9 +17,8 @@ I have implemented 3 ways to run the processes
 
 #### method 2
 1. run -> sudo sh ./start.sh
-
-#### this will install the dependencies required for launching the process
-#### output for each process will be merged on the same shell
+	#### this will install the dependencies required for launching the process
+	#### output for each process will be merged on the same shell
 
 
 #### method 3 - separate docker containers for all the 3 processes
