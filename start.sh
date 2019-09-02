@@ -5,6 +5,7 @@ kill `sudo lsof -t -i:9002` &
 
 wait &
 npm install &
+npm install -g typescript &
 npm install -g ts-node &
 
 wait &
