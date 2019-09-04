@@ -75,7 +75,7 @@ export class Lap implements LapI {
 					diff: selfRacerData.diff,
 					count: selfRacerData.count,
 					// active: selfRacerData.queue[0] || selfRacerData.active,
-					queue: [...selfRacerData.queue.slice(0), position]
+					queue: [...selfRacerData.queue, position]
 				}));
 			else {
 				this.notifications.set(racer.id, Object.assign({}, {
